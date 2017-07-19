@@ -105,7 +105,6 @@ namespace System.Data.SqlClient
             sqlBulkCopy = null;
         }
 
-
         public void WriteToServer<T>(string destinationTableName, IEnumerable<T> data)
         {
             sqlBulkCopy.DestinationTableName = destinationTableName;

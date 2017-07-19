@@ -1,3 +1,5 @@
+using Newtonsoft.Json;
+using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
@@ -14,7 +16,17 @@ namespace System.Data.SqlClient
             foreach (PropertyInfo propertyInfo in listType.GetProperties())
             {
                 var columnName = GetColumnName(propertyInfo);
-                dt.Columns.Add(columnName, propertyInfo.PropertyType);
+
+                if (propertyInfo.PropertyType.IsNonStringEnumerable())
+                {
+                    dt.Columns.Add(columnName, typeof(string));
+                }
+                else
+                {
+                    dt.Columns.Add(columnName, Nullable.GetUnderlyingType(propertyInfo.PropertyType) ?? propertyInfo.PropertyType);
+                }
+
+
                 sqlBulkCopy.ColumnMappings.Add(columnName, columnName);
             }
 
@@ -24,7 +36,15 @@ namespace System.Data.SqlClient
                 foreach (PropertyInfo propertyInfo in listType.GetProperties())
                 {
                     var columnName = GetColumnName(propertyInfo);
-                    dr[columnName] = propertyInfo.GetValue(value, null);
+
+                    if (propertyInfo.PropertyType.IsNonStringEnumerable())
+                    {
+                        dr[columnName] = JsonConvert.SerializeObject(propertyInfo.GetValue(value, null));
+                    }
+                    else
+                    {
+                        dr[columnName] = propertyInfo.GetValue(value, null) ?? DBNull.Value;
+                    }
                 }
                 dt.Rows.Add(dr);
             }
